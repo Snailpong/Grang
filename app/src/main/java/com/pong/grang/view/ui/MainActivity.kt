@@ -1,4 +1,4 @@
-package com.pong.grang.view
+package com.pong.grang.view.ui
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
