@@ -1,7 +1,10 @@
 package com.pong.grang.view.ui
 
+import android.media.MediaPlayer
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.SurfaceHolder
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pong.grang.R
@@ -10,16 +13,25 @@ import com.pong.grang.view.adapter.SubtitleAdapter
 import kotlinx.android.synthetic.main.activity_player_subtitle.*
 import kotlinx.android.synthetic.main.dialog_add_subtitle.view.*
 
-class PlayerSubtitleActivity : AppCompatActivity() {
+class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private lateinit var mSubtitleAdapter: SubtitleAdapter
     private val mSubtitleItems: ArrayList<SubtitleModel> = ArrayList()
+    private val videoURL: String = "http://techslides.com/demos/sample-videos/small.mp4"
+    private lateinit var mVideoScreen: MediaPlayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player_subtitle)
 
+        initSurface()
         initRecyclerView()
         initAddButton()
+    }
+
+    private fun initSurface() {
+//        var mediaPlayer: MediaPlayer? = MediaPlayer.create(this, videoUri)
+        screen_player.holder.addCallback(this)
     }
 
     private fun initRecyclerView() {
@@ -63,5 +75,22 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             .setNegativeButton("No", null)
             .create()
         dialog.show()
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        val videoUri: Uri = Uri.parse(videoURL)
+        mVideoScreen = MediaPlayer()
+        mVideoScreen.setDataSource(videoURL)
+        mVideoScreen.setDisplay(holder)
+        mVideoScreen.prepare()
+        mVideoScreen.start()
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        //TODO("Not yet implemented")
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        mVideoScreen.release()
     }
 }
