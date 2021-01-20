@@ -1,5 +1,6 @@
 package com.pong.grang.view.ui
 
+import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -17,12 +18,14 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private lateinit var mSubtitleAdapter: SubtitleAdapter
     private val mSubtitleItems: ArrayList<SubtitleModel> = ArrayList()
-    private val videoURL: String = "http://techslides.com/demos/sample-videos/small.mp4"
+    private lateinit var videoURL: String
     private lateinit var mVideoScreen: MediaPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player_subtitle)
+
+        videoURL = getIntent().getStringExtra("videoUri")!!
 
         initSurface()
         initRecyclerView()
@@ -78,7 +81,6 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        val videoUri: Uri = Uri.parse(videoURL)
         mVideoScreen = MediaPlayer()
         mVideoScreen.setDataSource(videoURL)
         mVideoScreen.setDisplay(holder)
