@@ -9,6 +9,7 @@ import android.widget.Toast
 import com.pedro.library.AutoPermissions
 import com.pedro.library.AutoPermissionsListener
 import com.pong.grang.R
+import com.pong.grang.UriPathHelper
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), AutoPermissionsListener {
@@ -36,8 +37,8 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
     }
 
     private fun getPath(videoUri: Uri): String {
-//        TODO()
-        return videoUri.path!!
+        val realPath = UriPathHelper.getPath(this, videoUri)
+        return realPath!!
     }
 
     private fun startPlayer(video_path : String) {
