@@ -10,18 +10,20 @@ import com.pedro.library.AutoPermissions
 import com.pedro.library.AutoPermissionsListener
 import com.pong.grang.R
 import com.pong.grang.UriPathHelper
-import kotlinx.android.synthetic.main.activity_main.*
+import com.pong.grang.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), AutoPermissionsListener {
 
+    private lateinit var binding: ActivityMainBinding
     private val SELECT_MOVIE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         AutoPermissions.Companion.loadAllPermissions(this,101);
-        select_video_main.setOnClickListener(SelectVideoListener())
+        binding.selectVideoMain.setOnClickListener(SelectVideoListener())
 
     }
 

@@ -5,17 +5,20 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pong.grang.R
+import com.pong.grang.databinding.ActivityMainBinding
+import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
+import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
-import kotlinx.android.synthetic.main.activity_player_subtitle.*
-import kotlinx.android.synthetic.main.dialog_add_subtitle.view.*
 
 class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
+    private lateinit var binding: ActivityPlayerSubtitleBinding
     private lateinit var mSubtitleAdapter: SubtitleAdapter
     private val mSubtitleItems: ArrayList<SubtitleModel> = ArrayList()
     private lateinit var videoURL: String
@@ -23,7 +26,8 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_player_subtitle)
+        binding = ActivityPlayerSubtitleBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         videoURL = getIntent().getStringExtra("videoUri")!!
 
@@ -34,11 +38,11 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private fun initSurface() {
 //        var mediaPlayer: MediaPlayer? = MediaPlayer.create(this, videoUri)
-        screen_player.holder.addCallback(this)
+        binding.screenPlayer.holder.addCallback(this)
     }
 
     private fun initRecyclerView() {
-        mSubtitleAdapter = SubtitleAdapter(mSubtitleItems)
+        mSubtitleAdapter = SubtitleAdapter(this, mSubtitleItems)
 
         mSubtitleItems.run {
             add(SubtitleModel(1, 0, 60, "자막1"))
@@ -47,7 +51,7 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
             add(SubtitleModel(4, 120, 150, "자막4"))
         }
 
-        recyclerview_subtitle_list.run {
+        binding.recyclerviewSubtitleList.run {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@PlayerSubtitleActivity)
             adapter = mSubtitleAdapter
@@ -55,21 +59,20 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private fun initAddButton() {
-        btn_add_subtitle.setOnClickListener {
+        binding.btnAddSubtitle.setOnClickListener {
             openAddSubtitleDialog()
         }
     }
 
     private fun openAddSubtitleDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_subtitle, null)
+        val dialogView = DialogAddSubtitleBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
             .setTitle("add")
-            .setView(dialogView)
             .setPositiveButton("Ok", { dialogInterface, i ->
-                val idx = dialogView.idx_dialog_add_subtitle.text.toString().toInt()
-                val startTime = dialogView.start_time_dialog_add_subtitle.text.toString().toLong()
-                val endTime = dialogView.end_time_dialog_add_subtitle.text.toString().toLong()
-                val text = dialogView.text_dialog_add_subtitle.text.toString()
+                val idx = dialogView.idxDialogAddSubtitle.text.toString().toInt()
+                val startTime = dialogView.startTimeDialogAddSubtitle.text.toString().toLong()
+                val endTime = dialogView.endTimeDialogAddSubtitle.text.toString().toLong()
+                val text = dialogView.textDialogAddSubtitle.text.toString()
 
                 val subtitleModel = SubtitleModel(idx, startTime, endTime, text)
                 mSubtitleAdapter.addItem(subtitleModel)
@@ -77,6 +80,7 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
             })
             .setNegativeButton("No", null)
             .create()
+        dialog.setContentView(binding.root)
         dialog.show()
     }
 

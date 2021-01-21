@@ -1,17 +1,17 @@
 package com.pong.grang.view.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.pong.grang.R
+import com.pong.grang.databinding.ItemSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 
-class SubtitleAdapter(val subtitleItems: ArrayList<SubtitleModel>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_subtitle, parent, false)
-        val viewHolder = SubtitleHolder(view)
+class SubtitleAdapter(private val context : Context, val subtitleItems: ArrayList<SubtitleModel>): RecyclerView.Adapter<SubtitleAdapter.SubtitleHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SubtitleHolder {
+        val binding = ItemSubtitleBinding.inflate(LayoutInflater.from(context), parent, false)
 
-        return viewHolder
+        return SubtitleHolder(binding)
     }
 
     fun addItem(subtitleModel: SubtitleModel) {
@@ -22,9 +22,14 @@ class SubtitleAdapter(val subtitleItems: ArrayList<SubtitleModel>): RecyclerView
         return subtitleItems.size
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val subtitleModel = subtitleItems[position]
-        val subtitleHolder = holder as SubtitleHolder
-        subtitleHolder.bind(subtitleModel)
+    override fun onBindViewHolder(holder: SubtitleHolder, position: Int) {
+        holder.onBind(subtitleItems[position])
+    }
+
+    class SubtitleHolder(val binding : ItemSubtitleBinding): RecyclerView.ViewHolder(binding.root) {
+        fun onBind(data : SubtitleModel) {
+            binding.subtitle = data
+        }
+
     }
 }
