@@ -18,9 +18,9 @@
             android:textColor="#000000"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:text="@{Integer.toString(subtitle.startTime)}"/>
+            android:text="@{Long.toString(subtitle.startTime)}" />
 
-        <TextView
+         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:id="@+id/item_subtitle_subtitle"

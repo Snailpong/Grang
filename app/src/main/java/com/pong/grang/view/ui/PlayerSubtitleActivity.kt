@@ -68,7 +68,7 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
         val dialogView = DialogAddSubtitleBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
             .setTitle("add")
-            .setPositiveButton("Ok", { dialogInterface, i ->
+            .setPositiveButton("Ok", { dialogInterface, _ ->
                 val idx = dialogView.idxDialogAddSubtitle.text.toString().toInt()
                 val startTime = dialogView.startTimeDialogAddSubtitle.text.toString().toLong()
                 val endTime = dialogView.endTimeDialogAddSubtitle.text.toString().toLong()
