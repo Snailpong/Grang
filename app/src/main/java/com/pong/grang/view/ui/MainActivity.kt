@@ -14,8 +14,12 @@ import com.pong.grang.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), AutoPermissionsListener {
 
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding : ActivityMainBinding
     private val SELECT_MOVIE = 2
+    private val SELECT_SUBTITLE = 3
+
+    private lateinit var videoPath : String
+    private lateinit var subtitlePath : String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,11 +34,21 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == RESULT_OK && requestCode == SELECT_MOVIE) {
+        if (resultCode == RESULT_OK) {
             val videoUri : Uri = data!!.data!!
-            val videoPath : String = getPath(videoUri)
-            Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
-            startPlayer(videoPath)
+            if (requestCode == SELECT_MOVIE) {
+                videoPath = getPath(videoUri)
+                Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
+
+                val subtitleIntent = Intent(Intent.ACTION_GET_CONTENT)
+                subtitleIntent.setType("video/*")
+                subtitleIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivityForResult(subtitleIntent, SELECT_SUBTITLE)
+            } else if (requestCode == SELECT_SUBTITLE) {
+                subtitlePath = getPath(videoUri)
+                Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
+                startPlayer()
+            }
         }
     }
 
@@ -43,9 +57,10 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
         return realPath!!
     }
 
-    private fun startPlayer(video_path : String) {
+    private fun startPlayer() {
         val playerIntent = Intent(this, PlayerSubtitleActivity::class.java)
-        playerIntent.putExtra("videoUri", video_path)
+        playerIntent.putExtra("videoUri", videoPath)
+        playerIntent.putExtra("subtitleUri", subtitlePath)
         startActivity(playerIntent)
     }
 

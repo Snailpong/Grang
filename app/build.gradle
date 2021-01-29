@@ -28,6 +28,10 @@ android {
         dataBinding = true
     }
 
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
 }
 
 allprojects {
@@ -45,6 +49,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.room:room-runtime:2.2.6'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
+    implementation 'com.google.android.exoplayer:exoplayer:2.12.3'
     kapt 'androidx.room:room-compiler:2.2.6'
     kapt 'androidx.lifecycle:lifecycle-compiler:2.2.0'
     testImplementation 'junit:junit:4.12'
