@@ -1,27 +1,28 @@
 package com.pong.grang.view.ui
 
-import android.content.Intent
+import android.R
 import android.media.MediaPlayer
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.SurfaceHolder
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.pong.grang.R
-import com.pong.grang.databinding.ActivityMainBinding
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
 
-class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
+
+class PlayerSubtitleActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPlayerSubtitleBinding
     private lateinit var mSubtitleAdapter: SubtitleAdapter
     private val mSubtitleItems: ArrayList<SubtitleModel> = ArrayList()
     private lateinit var videoURL: String
+    private lateinit var player: SimpleExoPlayer
     private lateinit var mVideoScreen: MediaPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,14 +32,18 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         videoURL = getIntent().getStringExtra("videoUri")!!
 
-        initSurface()
+        initPlayer()
         initRecyclerView()
         initAddButton()
     }
 
-    private fun initSurface() {
-//        var mediaPlayer: MediaPlayer? = MediaPlayer.create(this, videoUri)
-        binding.screenPlayer.holder.addCallback(this)
+    private fun initPlayer() {
+        player = SimpleExoPlayer.Builder(this).build()
+        binding.videoView.setPlayer(player)
+        val mediaItem: MediaItem = MediaItem.fromUri(videoURL)
+        player.setMediaItem(mediaItem)
+        player.setPlayWhenReady(true);
+        player.prepare();
     }
 
     private fun initRecyclerView() {
@@ -82,21 +87,5 @@ class PlayerSubtitleActivity : AppCompatActivity(), SurfaceHolder.Callback {
             .create()
         dialog.setContentView(binding.root)
         dialog.show()
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        mVideoScreen = MediaPlayer()
-        mVideoScreen.setDataSource(videoURL)
-        mVideoScreen.setDisplay(holder)
-        mVideoScreen.prepare()
-        mVideoScreen.start()
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        //TODO("Not yet implemented")
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        mVideoScreen.release()
     }
 }
