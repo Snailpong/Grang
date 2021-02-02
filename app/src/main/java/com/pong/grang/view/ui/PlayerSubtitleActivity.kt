@@ -2,26 +2,18 @@ package com.pong.grang.view.ui
 
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.database.DatabaseProvider
-import com.google.android.exoplayer2.database.ExoDatabaseProvider
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.source.*
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.*
-import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
-import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
-import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
+import com.google.common.collect.Lists
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
@@ -44,29 +36,28 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         binding = ActivityPlayerSubtitleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        videoUri = getIntent().getStringExtra("videoUri")!!
-        subtitleUri = getIntent().getStringExtra("subtitleUri")!!
+        videoUri = intent.getStringExtra("videoUri")!!
+        subtitleUri = intent.getStringExtra("subtitleUri")!!
 
         videoUri = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
         subtitleUri = "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt"
 
         playerView = binding.videoView
-
+        initSubtitleData()
         initRecyclerView()
         initAddButton()
     }
 
     override fun onStart() {
         super.onStart()
-        player = ExoPlayerFactory.newSimpleInstance(this,
-            DefaultTrackSelector())
-        playerView.setPlayer(player)
+        player = SimpleExoPlayer.Builder(this).build()
+        playerView.player = player
         playWithCaption()
     }
 
     override fun onStop() {
         super.onStop()
-        playerView.setPlayer(null)
+        playerView.player = null
         player!!.release()
         player = null
     }
@@ -74,31 +65,30 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun playWithCaption() {
         val dataSourceFactory = DefaultDataSourceFactory(this,
             Util.getUserAgent(this, "exo-demo"))
-        val contentMediaSource = buildMediaSource(Uri.parse(videoUri))
-        //Add subtitles
+        val contentMediaSource = buildMediaSource(videoUri)
         val subtitleSource = SingleSampleMediaSource(Uri.parse(subtitleUri), dataSourceFactory,
             Format.createTextSampleFormat(null, MimeTypes.APPLICATION_SUBRIP, Format.NO_VALUE, "en"),
             C.TIME_UNSET)
+
+//        val subtitle : MediaItem.Subtitle = MediaItem.Subtitle(Uri.parse(subtitleUri), MimeTypes.APPLICATION_SUBRIP, "en")
+//        val subtitleSource2 = SingleSampleMediaSource.Factory(dataSourceFactory).createMediaSource(subtitle, C.TIME_UNSET)
+//        val mediaItem : MediaItem = MediaItem.Builder().setUri(videoUri).setSubtitles(Lists.newArrayList(subtitle)).build()
+//        player!!.setMediaItem(mediaItem)
+
         val mediaSource = MergingMediaSource(contentMediaSource!!, subtitleSource)
-        // Prepare the player with the source.
-        //player.seekTo(contentPosition);
-        player!!.prepare(mediaSource)
-        player!!.setPlayWhenReady(true)
+        player!!.setMediaSource(mediaSource)
+        player!!.prepare()
+        player!!.playWhenReady = true
     }
 
-
-//    private fun buildMediaSource(parse:Uri):MediaSource {
-//        val dataSourceFactory = DefaultDataSourceFactory(this,
-//            Util.getUserAgent(this, "exo-demo"))
-//        mediaSource = ExtractorMediaSource(parse, dataSourceFactory, DefaultExtractorsFactory(), Handler(), null)
-//        return mediaSource
-//    }
-
-
-    private fun buildMediaSource(uri: Uri): MediaSource? {
+    private fun buildMediaSource(uri: String): MediaSource? {
         val userAgent: String = Util.getUserAgent(this, "blackJin")
-        return ExtractorMediaSource.Factory(DefaultHttpDataSourceFactory(userAgent))
-            .createMediaSource(uri)
+        return ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory(userAgent))
+            .createMediaSource(MediaItem.fromUri(uri))
+    }
+
+    private fun initSubtitleData() {
+
     }
 
     private fun initRecyclerView() {
