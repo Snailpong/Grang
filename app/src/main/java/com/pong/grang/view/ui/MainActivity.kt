@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
                 Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
 
                 val subtitleIntent = Intent(Intent.ACTION_GET_CONTENT)
-                subtitleIntent.setType("video/*")
+                subtitleIntent.setType("*/*")
                 subtitleIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivityForResult(subtitleIntent, SELECT_SUBTITLE)
             } else if (requestCode == SELECT_SUBTITLE) {

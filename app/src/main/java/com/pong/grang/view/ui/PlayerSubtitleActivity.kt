@@ -2,22 +2,22 @@ package com.pong.grang.view.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.github.dnbn.submerge.api.parser.SRTParser
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.*
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
-import com.google.common.collect.Lists
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
+import java.io.File
 
 
 class PlayerSubtitleActivity : AppCompatActivity() {
@@ -40,7 +40,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         subtitleUri = intent.getStringExtra("subtitleUri")!!
 
         videoUri = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
-        subtitleUri = "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt"
+//        subtitleUri = "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt"
 
         playerView = binding.videoView
         initSubtitleData()
@@ -88,7 +88,9 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     }
 
     private fun initSubtitleData() {
-
+        val subtitleFile = File(subtitleUri)
+        val subtitleSrtSub =  SRTParser().parse(subtitleFile)
+        val subtitleList = subtitleSrtSub.lines
     }
 
     private fun initRecyclerView() {
