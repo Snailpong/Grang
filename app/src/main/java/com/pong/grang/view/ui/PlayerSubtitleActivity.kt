@@ -7,6 +7,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.dnbn.submerge.api.parser.SRTParser
+import com.github.dnbn.submerge.api.subtitle.srt.SRTLine
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.*
 import com.google.android.exoplayer2.ui.PlayerView
@@ -18,13 +19,15 @@ import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class PlayerSubtitleActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityPlayerSubtitleBinding
     private lateinit var mSubtitleAdapter : SubtitleAdapter
-    private val mSubtitleItems : ArrayList<SubtitleModel> = ArrayList()
+    private lateinit var subtitleList : ArrayList<SRTLine>
     private lateinit var videoUri : String
     private lateinit var subtitleUri : String
     private lateinit var playerView : PlayerView
@@ -90,18 +93,20 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun initSubtitleData() {
         val subtitleFile = File(subtitleUri)
         val subtitleSrtSub =  SRTParser().parse(subtitleFile)
-        val subtitleList = subtitleSrtSub.lines
+        val subtitleSet = subtitleSrtSub.lines
+        subtitleList = ArrayList(subtitleSet)
+        subtitleList.sort()
     }
 
     private fun initRecyclerView() {
-        mSubtitleAdapter = SubtitleAdapter(this, mSubtitleItems)
+        mSubtitleAdapter = SubtitleAdapter(this, subtitleList)
 
-        mSubtitleItems.run {
-            add(SubtitleModel(1, 0, 60, "자막1"))
-            add(SubtitleModel(2, 60, 90, "자막2"))
-            add(SubtitleModel(3, 90, 120, "자막3"))
-            add(SubtitleModel(4, 120, 150, "자막4"))
-        }
+//        mSubtitleItems.run {
+//            add(SubtitleModel(1, 0, 60, "자막1"))
+//            add(SubtitleModel(2, 60, 90, "자막2"))
+//            add(SubtitleModel(3, 90, 120, "자막3"))
+//            add(SubtitleModel(4, 120, 150, "자막4"))
+//        }
 
         binding.recyclerviewSubtitleList.run {
             setHasFixedSize(true)
@@ -127,7 +132,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 val text = dialogView.textDialogAddSubtitle.text.toString()
 
                 val subtitleModel = SubtitleModel(idx, startTime, endTime, text)
-                mSubtitleAdapter.addItem(subtitleModel)
+//                mSubtitleAdapter.addItem(subtitleModel)
                 mSubtitleAdapter.notifyDataSetChanged()
             })
             .setNegativeButton("No", null)

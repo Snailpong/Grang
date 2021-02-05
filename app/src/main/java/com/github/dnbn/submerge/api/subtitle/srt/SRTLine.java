@@ -1,6 +1,7 @@
 package com.github.dnbn.submerge.api.subtitle.srt;
 
 import com.github.dnbn.submerge.api.subtitle.common.SubtitleLine;
+import com.github.dnbn.submerge.api.subtitle.common.TimedLine;
 
 import java.util.List;
 
@@ -33,6 +34,16 @@ public class SRTLine extends SubtitleLine<SRTTime> {
         }
         return sb.append(NEW_LINE).toString();
     }
+
+//    @Override
+//    public int compareTo(SRTLine s) {
+//        if(this.time.getStart() < s.time.getStart()) {
+//            return -1;
+//        } else if (this.time.getStart() > s.time.getStart()) {
+//            return 1;
+//        }
+//        return 0;
+//    }
 
     // ===================== getter and setter start =====================
 

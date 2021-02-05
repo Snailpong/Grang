@@ -4,31 +4,32 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.github.dnbn.submerge.api.subtitle.srt.SRTLine
 import com.pong.grang.databinding.ItemSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 
-class SubtitleAdapter(private val context : Context, val subtitleItems: ArrayList<SubtitleModel>): RecyclerView.Adapter<SubtitleAdapter.SubtitleHolder>() {
+class SubtitleAdapter(private val context : Context, val subtitleLines: ArrayList<SRTLine>): RecyclerView.Adapter<SubtitleAdapter.SubtitleHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SubtitleHolder {
         val binding = ItemSubtitleBinding.inflate(LayoutInflater.from(context), parent, false)
 
         return SubtitleHolder(binding)
     }
 
-    fun addItem(subtitleModel: SubtitleModel) {
-        subtitleItems.add(subtitleModel)
+    fun addItem(srtLine: SRTLine) {
+        subtitleLines.add(srtLine)
     }
 
     override fun getItemCount(): Int {
-        return subtitleItems.size
+        return subtitleLines.size
     }
 
     override fun onBindViewHolder(holder: SubtitleHolder, position: Int) {
-        holder.onBind(subtitleItems[position])
+        holder.onBind(subtitleLines[position])
     }
 
     class SubtitleHolder(val binding : ItemSubtitleBinding): RecyclerView.ViewHolder(binding.root) {
-        fun onBind(data : SubtitleModel) {
-            binding.subtitle = data
+        fun onBind(data : SRTLine) {
+            binding.srtLine = data
         }
 
     }
