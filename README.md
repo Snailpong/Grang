@@ -11,9 +11,11 @@ Grang은 외국어 듣기 실력의 집중적인 향상을 위해 개발되고 �
 
 ## Development Step
 ~~Stage 1. ANS with Kotlin 시도하기. ExoPlayer로 영상과 자막(subrip) 불러와서 재생하기~~   
-Stage 2. 자막을 RecyclerView로 뿌리고, 이동이 가능하게 하기   
-Stage 3. SMI 파일 추가 for Korean   
-Stage 4. 백그라운드 재생 지원   
+~~Stage 2. 자막을 RecyclerView로 뿌리고, 이동이 가능하게 하기~~   
+Stage 3. Custom Dialog를 이용해 파일 불러오게 하기, UI 일부 작업   
+Stage 4. SMI 파일 추가 for Korean   
+Stage 5. 자막 읽어주기 기능, 영상과 자막 스크롤링 동기화
+Stage 6. 백그라운드 재생 지원   
 ...
 
 

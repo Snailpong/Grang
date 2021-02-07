@@ -99,7 +99,9 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     }
 
     private fun initRecyclerView() {
-        mSubtitleAdapter = SubtitleAdapter(this, subtitleList)
+        mSubtitleAdapter = SubtitleAdapter(this, subtitleList) {
+            srtLine -> player?.seekTo(srtLine.time.start)
+        }
 
         binding.recyclerviewSubtitleList.run {
             setHasFixedSize(true)
