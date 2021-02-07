@@ -101,13 +101,6 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun initRecyclerView() {
         mSubtitleAdapter = SubtitleAdapter(this, subtitleList)
 
-//        mSubtitleItems.run {
-//            add(SubtitleModel(1, 0, 60, "자막1"))
-//            add(SubtitleModel(2, 60, 90, "자막2"))
-//            add(SubtitleModel(3, 90, 120, "자막3"))
-//            add(SubtitleModel(4, 120, 150, "자막4"))
-//        }
-
         binding.recyclerviewSubtitleList.run {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@PlayerSubtitleActivity)

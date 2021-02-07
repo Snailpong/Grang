@@ -5,6 +5,8 @@ package com.github.dnbn.submerge.api.subtitle.common;
 public class SubtitleTime implements TimedObject {
 
     private static final long serialVersionUID = -2283115927128309201L;
+    private static final String H_PATTERN = "%d:%02d:%02d";
+    private static final String M_PATTERN = "%d:%02d";
 
     /**
      * Start Time of the Event, in 0:00:00:00 format ie. Hrs:Mins:Secs:hundredths. This is
@@ -60,6 +62,20 @@ public class SubtitleTime implements TimedObject {
         } else {
             return 0;
         }
+    }
+
+    public String getStartFormat() {
+        long time = getStart();
+
+        long s = time / 1000;
+        long hh = s / 60 / 60;
+        long min = (s / 60) % 60;
+        long sec = s % 60;
+
+        if (time > 3600000)
+            return String.format(H_PATTERN, hh, min, sec);
+        else
+            return String.format(M_PATTERN, min, sec);
     }
 
     // ===================== getter and setter start =====================

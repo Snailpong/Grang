@@ -35,6 +35,11 @@ public class SRTLine extends SubtitleLine<SRTTime> {
         return sb.append(NEW_LINE).toString();
     }
 
+    public String printLines(List<String> htmlList) {
+        String lines = String.join("\n", htmlList);
+        return lines.replaceAll("<(/)?([a-zA-Z]*)(\\s[a-zA-Z]*=[^>]*)?(\\s)*(/)?>", "");
+    }
+
 //    @Override
 //    public int compareTo(SRTLine s) {
 //        if(this.time.getStart() < s.time.getStart()) {
