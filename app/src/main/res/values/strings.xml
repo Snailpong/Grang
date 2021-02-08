@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Grang</string>
+    <string name="title_choose_video">영상 선택</string>
+    <string name="title_choose_subtitle">자막 선택</string>
+    <string name="title_choose">Ok</string>
+    <string name="dialog_cancel">Cancel</string>
 </resources>
