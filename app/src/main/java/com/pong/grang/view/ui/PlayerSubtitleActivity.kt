@@ -8,10 +8,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.dnbn.submerge.api.parser.SRTParser
 import com.github.dnbn.submerge.api.subtitle.srt.SRTLine
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.source.*
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.Format
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.MergingMediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.SingleSampleMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.*
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
@@ -19,8 +28,6 @@ import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 class PlayerSubtitleActivity : AppCompatActivity() {
@@ -42,7 +49,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         videoUri = intent.getStringExtra("videoUri")!!
         subtitleUri = intent.getStringExtra("subtitleUri")!!
 
-        videoUri = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
+//        videoUri = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
 //        subtitleUri = "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt"
 
         playerView = binding.videoView
@@ -86,8 +93,10 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
     private fun buildMediaSource(uri: String): MediaSource? {
         val userAgent: String = Util.getUserAgent(this, "blackJin")
-        return ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory(userAgent))
+        return ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this, userAgent))
             .createMediaSource(MediaItem.fromUri(uri))
+//        return ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory(userAgent))
+//            .createMediaSource(MediaItem.fromUri(uri))
     }
 
     private fun initSubtitleData() {
