@@ -1,10 +1,10 @@
 package com.pong.grang.view.ui
 
-import android.R
-import android.R.attr.path
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.preference.Preference
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +13,7 @@ import com.pedro.library.AutoPermissions
 import com.pedro.library.AutoPermissionsListener
 import com.pong.grang.UriPathHelper
 import com.pong.grang.databinding.ActivityMainBinding
+import com.pong.grang.helper.PreferenceManager
 
 
 class MainActivity : AppCompatActivity(), AutoPermissionsListener {
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
 
     private lateinit var videoPath : String
     private lateinit var subtitlePath : String
+    private lateinit var lastVideoPath : String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,9 +71,10 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
 
     inner class SelectVideoListener : View.OnClickListener {
         override fun onClick(v: View?) {
+            lastVideoPath = PreferenceManager.getString(this@MainActivity, "lastVideoPath", Environment.getExternalStorageDirectory().absolutePath)!!
             ChooserDialog(this@MainActivity)
                 .withFilterRegex(false, false, ".*\\.(wmv|flv|mkv|3gp|mp4)")
-//                .withStartFile(path)
+                .withStartFile(lastVideoPath)
 //                .withResources(
 //                    R.string.title_choose_video,
 //                    R.string.title_choose,
@@ -87,9 +90,11 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
         ChooserDialog.Result { path, pathFile ->
             Toast.makeText(this@MainActivity, path, Toast.LENGTH_LONG).show()
             videoPath = path
+            lastVideoPath = path
+            PreferenceManager.setString(this@MainActivity, "lastVideoPath", path)
             ChooserDialog(this@MainActivity)
                 .withFilterRegex(false, false, ".*\\.(srt)")
-//                .withStartFile(path)
+                .withStartFile(path)
 //                .withResources(
 //                    R.string.title_choose_video,
 //                    R.string.title_choose,

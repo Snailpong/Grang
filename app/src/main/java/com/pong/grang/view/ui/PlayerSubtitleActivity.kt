@@ -2,29 +2,30 @@ package com.pong.grang.view.ui
 
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.dnbn.submerge.api.parser.SRTParser
 import com.github.dnbn.submerge.api.subtitle.srt.SRTLine
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.Format
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
-import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.SingleSampleMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
+import com.pong.grang.helper.CenterSmoothScroller
 import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
@@ -38,6 +39,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var videoUri : String
     private lateinit var subtitleUri : String
     private lateinit var playerView : PlayerView
+    private lateinit var smoothScroller : RecyclerView.SmoothScroller
 
     var player : SimpleExoPlayer? = null
 
@@ -48,9 +50,6 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
         videoUri = intent.getStringExtra("videoUri")!!
         subtitleUri = intent.getStringExtra("subtitleUri")!!
-
-//        videoUri = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
-//        subtitleUri = "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt"
 
         playerView = binding.videoView
         initSubtitleData()
@@ -110,6 +109,9 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun initRecyclerView() {
         mSubtitleAdapter = SubtitleAdapter(this, subtitleList) {
             srtLine -> player?.seekTo(srtLine.time.start)
+            smoothScroller.targetPosition = srtLine.id
+            binding.recyclerviewSubtitleList.layoutManager!!.startSmoothScroll(smoothScroller)
+            Toast.makeText(this, srtLine.id.toString(), Toast.LENGTH_SHORT).show()
         }
 
         binding.recyclerviewSubtitleList.run {
@@ -117,6 +119,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@PlayerSubtitleActivity)
             adapter = mSubtitleAdapter
         }
+        smoothScroller = CenterSmoothScroller(binding.recyclerviewSubtitleList.context)
     }
 
     private fun initAddButton() {
