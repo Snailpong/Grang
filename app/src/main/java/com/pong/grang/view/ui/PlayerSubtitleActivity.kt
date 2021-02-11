@@ -40,6 +40,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var subtitleUri : String
     private lateinit var playerView : PlayerView
     private lateinit var smoothScroller : RecyclerView.SmoothScroller
+    private lateinit var scrollSubtitleHandler : Handler
 
     var player : SimpleExoPlayer? = null
 
@@ -54,6 +55,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerView = binding.videoView
         initSubtitleData()
         initRecyclerView()
+        attachSubtitleSync()
         initAddButton()
     }
 
@@ -109,8 +111,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun initRecyclerView() {
         mSubtitleAdapter = SubtitleAdapter(this, subtitleList) {
             srtLine -> player?.seekTo(srtLine.time.start)
-            smoothScroller.targetPosition = srtLine.id
-            binding.recyclerviewSubtitleList.layoutManager!!.startSmoothScroll(smoothScroller)
+            startSmoothScrollToPosition(srtLine.id)
             Toast.makeText(this, srtLine.id.toString(), Toast.LENGTH_SHORT).show()
         }
 
@@ -120,6 +121,42 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             adapter = mSubtitleAdapter
         }
         smoothScroller = CenterSmoothScroller(binding.recyclerviewSubtitleList.context)
+    }
+
+    private fun attachSubtitleSync() {
+        scrollSubtitleHandler = Handler()
+        val scrollSubtitleRunnable = object : Runnable {
+            override fun run() {
+                val subtitleDelay = 300
+                if(player != null && player!!.isPlaying()) {
+                    val currentPos = player!!.currentPosition
+                    val index = 0
+                    for (srtLine in subtitleList) {
+                        if (currentPos >= srtLine.time.start - subtitleDelay
+                            && currentPos <= srtLine.time.end - subtitleDelay
+                        ) {
+//                            listView.setItemChecked(index, true)
+                            startSmoothScrollToPosition(srtLine.id)
+                            break
+                        } else {
+//                            setSubtitleTextView(null)
+                            if (currentPos < srtLine.time.end - subtitleDelay) {
+                                break
+                            }
+                        }
+//                        index++
+                    }
+                }
+                scrollSubtitleHandler.postDelayed(this, 300)
+            }
+        }
+        scrollSubtitleHandler.post(scrollSubtitleRunnable)
+
+    }
+
+    private fun startSmoothScrollToPosition(pos : Int) {
+        smoothScroller.targetPosition = pos
+        binding.recyclerviewSubtitleList.layoutManager!!.startSmoothScroll(smoothScroller)
     }
 
     private fun initAddButton() {
