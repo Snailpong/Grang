@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -40,9 +41,11 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var subtitleUri : String
     private lateinit var playerView : PlayerView
     private lateinit var smoothScroller : RecyclerView.SmoothScroller
+    private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
 
     var player : SimpleExoPlayer? = null
+    private var isSync : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +58,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerView = binding.videoView
         initSubtitleData()
         initRecyclerView()
-        attachSubtitleSync()
+        initSubtitleSync()
         initAddButton()
     }
 
@@ -71,6 +74,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerView.player = null
         player!!.release()
         player = null
+        detachSubtitleSync()
     }
 
     private fun playWithCaption() {
@@ -114,21 +118,32 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             startSmoothScrollToPosition(srtLine.id)
             Toast.makeText(this, srtLine.id.toString(), Toast.LENGTH_SHORT).show()
         }
-
         binding.recyclerviewSubtitleList.run {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@PlayerSubtitleActivity)
             adapter = mSubtitleAdapter
         }
+        val onTouchListener = object:RecyclerView.OnItemTouchListener {
+            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {}
+            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
+
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                if(e.action == MotionEvent.ACTION_DOWN && isSync) {
+                    detachSubtitleSync()
+                }
+                return false
+            }
+        }
+        binding.recyclerviewSubtitleList.addOnItemTouchListener(onTouchListener)
         smoothScroller = CenterSmoothScroller(binding.recyclerviewSubtitleList.context)
     }
 
-    private fun attachSubtitleSync() {
+    private fun initSubtitleSync() {
         scrollSubtitleHandler = Handler()
-        val scrollSubtitleRunnable = object : Runnable {
+        scrollSubtitleRunnable = object : Runnable {
             override fun run() {
                 val subtitleDelay = 300
-                if(player != null && player!!.isPlaying()) {
+                if(player != null && player!!.isPlaying) {
                     val currentPos = player!!.currentPosition
                     val index = 0
                     for (srtLine in subtitleList) {
@@ -150,8 +165,19 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 scrollSubtitleHandler.postDelayed(this, 300)
             }
         }
-        scrollSubtitleHandler.post(scrollSubtitleRunnable)
+        attachSubtitleSync()
+    }
 
+    private fun attachSubtitleSync() {
+        scrollSubtitleHandler.post(scrollSubtitleRunnable)
+        binding.btnSyncSubtitle.text = "Syncing Subtitle"
+        isSync = true
+    }
+
+    private fun detachSubtitleSync() {
+        scrollSubtitleHandler.removeCallbacks(scrollSubtitleRunnable)
+        binding.btnSyncSubtitle.text = "Not Syncing Subtitle"
+        isSync = false
     }
 
     private fun startSmoothScrollToPosition(pos : Int) {
@@ -162,6 +188,9 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun initAddButton() {
         binding.btnAddSubtitle.setOnClickListener {
             openAddSubtitleDialog()
+        }
+        binding.btnSyncSubtitle.setOnClickListener {
+            if(!isSync) attachSubtitleSync()
         }
     }
 
