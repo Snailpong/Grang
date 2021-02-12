@@ -59,13 +59,14 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         initSubtitleData()
         initRecyclerView()
         initSubtitleSync()
-        initAddButton()
+        initButtonListener()
     }
 
     override fun onStart() {
         super.onStart()
         player = SimpleExoPlayer.Builder(this).build()
         playerView.player = player
+        binding.controlViewSubtitle.setPlayer(player)
         playWithCaption()
     }
 
@@ -143,7 +144,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         scrollSubtitleRunnable = object : Runnable {
             override fun run() {
                 val subtitleDelay = 300
-                if(player != null && player!!.isPlaying) {
+                if(player?.isPlaying == true) {
                     val currentPos = player!!.currentPosition
                     val index = 0
                     for (srtLine in subtitleList) {
@@ -185,7 +186,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         binding.recyclerviewSubtitleList.layoutManager!!.startSmoothScroll(smoothScroller)
     }
 
-    private fun initAddButton() {
+    private fun initButtonListener() {
         binding.btnAddSubtitle.setOnClickListener {
             openAddSubtitleDialog()
         }
