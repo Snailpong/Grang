@@ -81,7 +81,7 @@ public final class SRTParser extends BaseParser<SRTSub> {
 
 		int idSRTLine;
 		try {
-			idSRTLine = Integer.parseInt(textLine.trim());
+			idSRTLine = Integer.parseInt(textLine.trim()) - 1;
 		} catch (NumberFormatException e) {
 			throw new InvalidSRTSubException("Expected id not found -> " + textLine);
 		}

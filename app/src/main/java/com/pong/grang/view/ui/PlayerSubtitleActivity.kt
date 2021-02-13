@@ -1,16 +1,22 @@
 package com.pong.grang.view.ui
 
+import android.graphics.Typeface
+import android.icu.text.UnicodeSet
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.text.Spannable
+import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.WindowManager
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.github.dnbn.submerge.api.parser.SRTParser
 import com.github.dnbn.submerge.api.subtitle.srt.SRTLine
 import com.google.android.exoplayer2.C
@@ -23,8 +29,10 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.SingleSampleMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Log
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
+import com.pong.grang.R
 import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.helper.CenterSmoothScroller
@@ -43,8 +51,9 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
 
-    var player : SimpleExoPlayer? = null
+    private var player : SimpleExoPlayer? = null
     private var isSync : Boolean = false
+    private var currentSrtLine : SRTLine? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,7 +146,18 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 return false
             }
         }
+        val onScrollListener = object: RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if(newState == SCROLL_STATE_IDLE) {
+                    val view = binding.recyclerviewSubtitleList.layoutManager!!.findViewByPosition(currentSrtLine!!.id)
+                    val textView = view!!.findViewById<TextView>(R.id.item_subtitle_subtitle)
+                    textView.setTypeface(textView.typeface, Typeface.BOLD)
+                }
+            }
+        }
         binding.recyclerviewSubtitleList.addOnItemTouchListener(onTouchListener)
+        binding.recyclerviewSubtitleList.addOnScrollListener(onScrollListener)
     }
 
     private fun initSubtitleSync() {
@@ -147,27 +167,41 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 val subtitleDelay = 300
                 if(player?.isPlaying == true) {
                     val currentPos = player!!.currentPosition
-                    val index = 0
-                    for (srtLine in subtitleList) {
-                        if (currentPos >= srtLine.time.start - subtitleDelay
-                            && currentPos <= srtLine.time.end - subtitleDelay
-                        ) {
-//                            listView.setItemChecked(index, true)
-                            startSmoothScrollToPosition(srtLine.id)
-                            break
-                        } else {
-//                            setSubtitleTextView(null)
-                            if (currentPos < srtLine.time.end - subtitleDelay) {
-                                break
-                            }
-                        }
-//                        index++
+
+                    if (currentSrtLine == null || !(currentPos >= currentSrtLine!!.time.start - subtitleDelay
+                        && currentPos <= currentSrtLine!!.time.end - subtitleDelay)) {
+                        changeCurrentSrtLine(currentPos, subtitleDelay)
                     }
                 }
                 scrollSubtitleHandler.postDelayed(this, 300)
             }
         }
         attachSubtitleSync()
+    }
+
+    fun changeCurrentSrtLine(currentPos : Long, subtitleDelay : Int) {
+        for (srtLine in subtitleList) {
+            if (currentPos >= srtLine.time.start - subtitleDelay
+                && currentPos <= srtLine.time.end - subtitleDelay
+            ) {
+                if(currentSrtLine != null) {
+                    val prevView = binding.recyclerviewSubtitleList.layoutManager!!.findViewByPosition(currentSrtLine!!.id)
+                    Log.d("w", currentSrtLine!!.id.toString())
+                    val prevTextView = prevView!!.findViewById<TextView>(R.id.item_subtitle_subtitle)
+                    prevTextView.setTypeface(null, Typeface.NORMAL)
+                }
+                currentSrtLine = srtLine
+                Log.d("w", currentSrtLine!!.id.toString())
+                startSmoothScrollToPosition(srtLine.id)
+
+
+                break
+            } else {
+                if (currentPos < srtLine.time.end - subtitleDelay) {
+                    break
+                }
+            }
+        }
     }
 
     private fun attachSubtitleSync() {
