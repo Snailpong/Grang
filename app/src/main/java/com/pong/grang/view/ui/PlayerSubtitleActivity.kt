@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -39,8 +40,6 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var subtitleList : ArrayList<SRTLine>
     private lateinit var videoUri : String
     private lateinit var subtitleUri : String
-    private lateinit var playerView : PlayerView
-    private lateinit var smoothScroller : RecyclerView.SmoothScroller
     private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
 
@@ -51,31 +50,34 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPlayerSubtitleBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
 
-        videoUri = intent.getStringExtra("videoUri")!!
-        subtitleUri = intent.getStringExtra("subtitleUri")!!
-
-        playerView = binding.videoView
+        setUri()
         initSubtitleData()
+        startPlayer()
         initRecyclerView()
         initSubtitleSync()
         initButtonListener()
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.videoView.player = null
+        player!!.release()
+        player = null
+        detachSubtitleSync()
+    }
+
+    private fun startPlayer() {
         player = SimpleExoPlayer.Builder(this).build()
-        playerView.player = player
+        binding.videoView.player = player
         binding.controlViewSubtitle.setPlayer(player)
         playWithCaption()
     }
 
-    override fun onStop() {
-        super.onStop()
-        playerView.player = null
-        player!!.release()
-        player = null
-        detachSubtitleSync()
+    private fun setUri() {
+        videoUri = intent.getStringExtra("videoUri")!!
+        subtitleUri = intent.getStringExtra("subtitleUri")!!
     }
 
     private fun playWithCaption() {
@@ -136,7 +138,6 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             }
         }
         binding.recyclerviewSubtitleList.addOnItemTouchListener(onTouchListener)
-        smoothScroller = CenterSmoothScroller(binding.recyclerviewSubtitleList.context)
     }
 
     private fun initSubtitleSync() {
@@ -182,6 +183,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     }
 
     private fun startSmoothScrollToPosition(pos : Int) {
+        val smoothScroller = CenterSmoothScroller(binding.recyclerviewSubtitleList.context)
         smoothScroller.targetPosition = pos
         binding.recyclerviewSubtitleList.layoutManager!!.startSmoothScroll(smoothScroller)
     }
