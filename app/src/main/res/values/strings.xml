@@ -4,4 +4,7 @@
     <string name="title_choose_subtitle">자막 선택</string>
     <string name="title_choose">Ok</string>
     <string name="dialog_cancel">Cancel</string>
+    <string name="channel_name">Player</string>
+    <string name="channel_description">Play video</string>
+    <string name="channel_id">GrangChannel</string>
 </resources>

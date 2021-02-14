@@ -1,15 +1,15 @@
 package com.pong.grang.view.ui
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.graphics.Typeface
-import android.icu.text.UnicodeSet
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.text.Spannable
-import android.text.style.BackgroundColorSpan
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -27,7 +27,7 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.SingleSampleMediaSource
-import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Log
 import com.google.android.exoplayer2.util.MimeTypes
@@ -37,6 +37,7 @@ import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.helper.CenterSmoothScroller
 import com.pong.grang.model.SubtitleModel
+import com.pong.grang.view.adapter.DescriptionAdapter
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
 
@@ -50,6 +51,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var subtitleUri : String
     private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
+    private lateinit var playerNotificationMangager : PlayerNotificationManager
 
     private var player : SimpleExoPlayer? = null
     private var isSync : Boolean = false
@@ -63,7 +65,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
         setUri()
         initSubtitleData()
-        startPlayer()
+        initPlayer()
+        initPlayerNotification()
         initRecyclerView()
         initSubtitleSync()
         initButtonListener()
@@ -72,16 +75,35 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         binding.videoView.player = null
+        playerNotificationMangager.setPlayer(null)
         player!!.release()
         player = null
         detachSubtitleSync()
     }
 
-    private fun startPlayer() {
+    private fun initPlayer() {
         player = SimpleExoPlayer.Builder(this).build()
         binding.videoView.player = player
-        binding.controlViewSubtitle.setPlayer(player)
+        binding.controlViewSubtitle.player = player
+
         playWithCaption()
+    }
+
+    private fun initPlayerNotification() {
+        val name = getString(R.string.channel_name)
+        val descriptionText = getString(R.string.channel_description)
+        val channelId = getString(R.string.channel_id)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val mChannel = NotificationChannel(channelId, name, importance)
+            mChannel.description = descriptionText
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
+
+        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter())
+        playerNotificationMangager.setPlayer(player)
     }
 
     private fun setUri() {
@@ -149,7 +171,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         val onScrollListener = object: RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                if(newState == SCROLL_STATE_IDLE) {
+                if(newState == SCROLL_STATE_IDLE && isSync) {
                     val view = binding.recyclerviewSubtitleList.layoutManager!!.findViewByPosition(currentSrtLine!!.id)
                     val textView = view!!.findViewById<TextView>(R.id.item_subtitle_subtitle)
                     textView.setTypeface(textView.typeface, Typeface.BOLD)
@@ -185,16 +207,11 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 && currentPos <= srtLine.time.end - subtitleDelay
             ) {
                 if(currentSrtLine != null) {
-                    val prevView = binding.recyclerviewSubtitleList.layoutManager!!.findViewByPosition(currentSrtLine!!.id)
-                    Log.d("w", currentSrtLine!!.id.toString())
-                    val prevTextView = prevView!!.findViewById<TextView>(R.id.item_subtitle_subtitle)
-                    prevTextView.setTypeface(null, Typeface.NORMAL)
+                    typeFaceToNormal(currentSrtLine!!.id)
                 }
                 currentSrtLine = srtLine
                 Log.d("w", currentSrtLine!!.id.toString())
                 startSmoothScrollToPosition(srtLine.id)
-
-
                 break
             } else {
                 if (currentPos < srtLine.time.end - subtitleDelay) {
@@ -202,6 +219,15 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun typeFaceToNormal(id : Int?) {
+        id ?: return
+
+        val prevView = binding.recyclerviewSubtitleList.layoutManager?.findViewByPosition(id)
+        Log.d("w", id.toString())
+        val prevTextView = prevView?.findViewById<TextView>(R.id.item_subtitle_subtitle)
+        prevTextView?.setTypeface(null, Typeface.NORMAL)
     }
 
     private fun attachSubtitleSync() {
@@ -213,6 +239,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun detachSubtitleSync() {
         scrollSubtitleHandler.removeCallbacks(scrollSubtitleRunnable)
         binding.btnSyncSubtitle.text = "Not Syncing Subtitle"
+        typeFaceToNormal(currentSrtLine?.id)
+        currentSrtLine = null
         isSync = false
     }
 
