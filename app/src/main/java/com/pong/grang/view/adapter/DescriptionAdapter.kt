@@ -6,12 +6,13 @@ import androidx.annotation.Nullable
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.BitmapCallback
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.MediaDescriptionAdapter
+import org.apache.commons.io.FilenameUtils
 
 
-class DescriptionAdapter : MediaDescriptionAdapter {
+class DescriptionAdapter(var videoUri: String) : MediaDescriptionAdapter {
     override fun getCurrentContentTitle(player: Player): String {
         val window = player.currentWindowIndex
-        return "abc" // getTitle(window)
+        return FilenameUtils.getBaseName(videoUri)
     }
 
     @Nullable

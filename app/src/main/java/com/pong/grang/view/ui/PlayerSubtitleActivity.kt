@@ -1,6 +1,5 @@
 package com.pong.grang.view.ui
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.graphics.Typeface
@@ -102,7 +101,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(mChannel)
         }
 
-        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter())
+        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter(videoUri))
         playerNotificationMangager.setPlayer(player)
     }
 
