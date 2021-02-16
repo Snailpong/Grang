@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.widget.TextView
@@ -39,6 +40,8 @@ import com.pong.grang.model.SubtitleModel
 import com.pong.grang.view.adapter.DescriptionAdapter
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class PlayerSubtitleActivity : AppCompatActivity() {
@@ -51,9 +54,12 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
     private lateinit var playerNotificationMangager : PlayerNotificationManager
+    private lateinit var textToSpeech : TextToSpeech
 
     private var player : SimpleExoPlayer? = null
     private var isSync : Boolean = false
+    private var isTTS : Boolean = false
+    private var ttsState : Int = -1
     private var currentSrtLine : SRTLine? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +72,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         initSubtitleData()
         initPlayer()
         initPlayerNotification()
+        initTextToSpeech()
         initRecyclerView()
         initSubtitleSync()
         initButtonListener()
@@ -77,6 +84,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerNotificationMangager.setPlayer(null)
         player!!.release()
         player = null
+        textToSpeech.stop()
+        textToSpeech.shutdown()
         detachSubtitleSync()
     }
 
@@ -105,6 +114,31 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerNotificationMangager.setPlayer(player)
     }
 
+    private fun initTextToSpeech() {
+        textToSpeech = TextToSpeech(this, TextToSpeech.OnInitListener {
+            if (it === TextToSpeech.SUCCESS) {
+                //사용할 언어를 설정
+                player!!.playWhenReady = true
+                val result = textToSpeech.setLanguage(Locale.KOREA)
+                //언어 데이터가 없거나 혹은 언어가 지원하지 않으면...
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Toast.makeText(this@PlayerSubtitleActivity, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+//                    val onUtteranceListener = TextToSpeech.OnUtteranceCompletedListener
+                    textToSpeech.setOnUtteranceCompletedListener {
+                        ttsState = 2
+                        Log.d("w", "eeeee")
+                    }
+//                    btnEnter.setEnabled(true)
+                    //음성 톤
+//                    textToSpeech.setPitch(0.7f)
+                    //읽는 속도
+//                    textToSpeech.setSpeechRate(1.2f)
+                }
+            }
+        })
+    }
+
     private fun setUri() {
         videoUri = intent.getStringExtra("videoUri")!!
         subtitleUri = intent.getStringExtra("subtitleUri")!!
@@ -126,7 +160,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         val mediaSource = MergingMediaSource(contentMediaSource!!, subtitleSource)
         player!!.setMediaSource(mediaSource)
         player!!.prepare()
-        player!!.playWhenReady = true
+//        player!!.playWhenReady = true
     }
 
     private fun buildMediaSource(uri: String): MediaSource? {
@@ -191,7 +225,14 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
                     if (currentSrtLine == null || !(currentPos >= currentSrtLine!!.time.start - subtitleDelay
                         && currentPos <= currentSrtLine!!.time.end - subtitleDelay)) {
-                        changeCurrentSrtLine(currentPos, subtitleDelay)
+                        when(ttsState) {
+                            -1 -> changeCurrentSrtLine (currentPos, subtitleDelay)
+                            0 -> playCurrentSubtitleTTS()
+                            2 -> {
+                                player?.play()
+                                changeCurrentSrtLine (currentPos, subtitleDelay)
+                            }
+                        }
                     }
                 }
                 scrollSubtitleHandler.postDelayed(this, 300)
@@ -200,11 +241,20 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         attachSubtitleSync()
     }
 
-    fun changeCurrentSrtLine(currentPos : Long, subtitleDelay : Int) {
+    private fun playCurrentSubtitleTTS() {
+        player?.pause()
+        ttsState = 1
+        textToSpeech.speak(currentSrtLine?.printLines(currentSrtLine!!.textLines), TextToSpeech.QUEUE_FLUSH, null)
+    }
+
+    private fun changeCurrentSrtLine(currentPos : Long, subtitleDelay : Int) {
+        var flag = true
         for (srtLine in subtitleList) {
             if (currentPos >= srtLine.time.start - subtitleDelay
                 && currentPos <= srtLine.time.end - subtitleDelay
             ) {
+                flag = false
+                ttsState = 0
                 if(currentSrtLine != null) {
                     typeFaceToNormal(currentSrtLine!!.id)
                 }
@@ -218,6 +268,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 }
             }
         }
+        if(flag)
+            ttsState = -1
     }
 
     private fun typeFaceToNormal(id : Int?) {
@@ -231,13 +283,13 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
     private fun attachSubtitleSync() {
         scrollSubtitleHandler.post(scrollSubtitleRunnable)
-        binding.btnSyncSubtitle.text = "Syncing Subtitle"
+        binding.btnSyncSubtitle.text = "Sync on"
         isSync = true
     }
 
     private fun detachSubtitleSync() {
         scrollSubtitleHandler.removeCallbacks(scrollSubtitleRunnable)
-        binding.btnSyncSubtitle.text = "Not Syncing Subtitle"
+        binding.btnSyncSubtitle.text = "Sync off"
         typeFaceToNormal(currentSrtLine?.id)
         currentSrtLine = null
         isSync = false
@@ -255,6 +307,15 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         }
         binding.btnSyncSubtitle.setOnClickListener {
             if(!isSync) attachSubtitleSync()
+        }
+        binding.btnTtsEnable.setOnClickListener {
+            if(!isTTS) {
+                isTTS = true
+                binding.btnTtsEnable.text = "TTS on"
+            } else {
+                isTTS = false
+                binding.btnTtsEnable.text = "TTS off"
+            }
         }
     }
 
