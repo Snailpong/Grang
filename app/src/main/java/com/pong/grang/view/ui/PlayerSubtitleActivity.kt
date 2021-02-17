@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.widget.TextView
@@ -124,15 +125,19 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Toast.makeText(this@PlayerSubtitleActivity, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show()
                 } else {
-//                    val onUtteranceListener = TextToSpeech.OnUtteranceCompletedListener
-                    textToSpeech.setOnUtteranceCompletedListener {
-                        ttsState = 2
-                        Log.d("w", "eeeee")
+                    val utteranceProgressListener = object : UtteranceProgressListener() {
+                        override fun onError(p0: String?) {}
+                        override fun onStart(p0: String?) {}
+
+                        override fun onDone(p0: String?) {
+                            ttsState = 2
+                            Log.d("w", "eeeee")
+                        }
                     }
+
+                    textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener)
 //                    btnEnter.setEnabled(true)
-                    //음성 톤
 //                    textToSpeech.setPitch(0.7f)
-                    //읽는 속도
 //                    textToSpeech.setSpeechRate(1.2f)
                 }
             }
@@ -220,18 +225,20 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         scrollSubtitleRunnable = object : Runnable {
             override fun run() {
                 val subtitleDelay = 300
-                if(player?.isPlaying == true) {
+                if(player != null) {
                     val currentPos = player!!.currentPosition
-
-                    if (currentSrtLine == null || !(currentPos >= currentSrtLine!!.time.start - subtitleDelay
-                        && currentPos <= currentSrtLine!!.time.end - subtitleDelay)) {
-                        when(ttsState) {
-                            -1 -> changeCurrentSrtLine (currentPos, subtitleDelay)
-                            0 -> playCurrentSubtitleTTS()
-                            2 -> {
-                                player?.play()
-                                changeCurrentSrtLine (currentPos, subtitleDelay)
+                    when(ttsState) {
+                        -1 -> changeCurrentSrtLine (currentPos, subtitleDelay)
+                        0 -> {
+                            if (currentSrtLine == null || !(currentPos >= currentSrtLine!!.time.start - subtitleDelay
+                                        && currentPos <= currentSrtLine!!.time.end - subtitleDelay)) {
+                                if(isTTS) playCurrentSubtitleTTS()
+                                else changeCurrentSrtLine(currentPos, subtitleDelay)
                             }
+                        }
+                        2 -> {
+                            player?.play()
+                            changeCurrentSrtLine (currentPos, subtitleDelay)
                         }
                     }
                 }
@@ -244,7 +251,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private fun playCurrentSubtitleTTS() {
         player?.pause()
         ttsState = 1
-        textToSpeech.speak(currentSrtLine?.printLines(currentSrtLine!!.textLines), TextToSpeech.QUEUE_FLUSH, null)
+        textToSpeech.speak(currentSrtLine?.printLines(currentSrtLine!!.textLines), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID)
     }
 
     private fun changeCurrentSrtLine(currentPos : Long, subtitleDelay : Int) {
