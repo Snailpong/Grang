@@ -38,6 +38,7 @@ import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.helper.CenterSmoothScroller
 import com.pong.grang.model.SubtitleModel
+import com.pong.grang.view.adapter.ActionReceiver
 import com.pong.grang.view.adapter.DescriptionAdapter
 import com.pong.grang.view.adapter.SubtitleAdapter
 import java.io.File
@@ -111,7 +112,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(mChannel)
         }
 
-        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter(videoUri))
+        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter(videoUri), ActionReceiver())
         playerNotificationMangager.setPlayer(player)
     }
 
