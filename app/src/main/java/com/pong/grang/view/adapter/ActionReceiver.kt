@@ -8,19 +8,13 @@ import androidx.core.app.NotificationCompat
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.pong.grang.R
+import com.pong.grang.model.TTSModel
 
 
-class ActionReceiver : PlayerNotificationManager.CustomActionReceiver{
-//    var actions = mutableListOf<String>("prev", "back", "play", "pause", "for", "next")
-
+class ActionReceiver(private val tts: TTSModel) : PlayerNotificationManager.CustomActionReceiver{
     override fun getCustomActions(player: Player): MutableList<String> {
-//        return actions
         val customActions: MutableList<String> = ArrayList()
         customActions.add("fav")
-        Log.e(
-            "getCustomActions",
-            "action: " + player.getCurrentWindowIndex()
-        )
         return customActions
     }
 
@@ -38,16 +32,6 @@ class ActionReceiver : PlayerNotificationManager.CustomActionReceiver{
                 "fav",
                 pendingIntent
             )
-        /*
-        NotificationCompat.Action action = new NotificationCompat.Action(context.getResources()
-                .getIdentifier("music_clear",
-                        "drawable",context.getPackageName()),"closeBar",null);
-        */
-        /*
-        NotificationCompat.Action action = new NotificationCompat.Action(context.getResources()
-                .getIdentifier("music_clear",
-                        "drawable",context.getPackageName()),"closeBar",null);
-        */
         val actionMap: MutableMap<String, NotificationCompat.Action> =
             HashMap()
         actionMap["fav"] = action1
@@ -95,7 +79,16 @@ class ActionReceiver : PlayerNotificationManager.CustomActionReceiver{
 
     override fun onCustomAction(player: Player, action: String, intent: Intent) {
         Log.d("wwww", action)
-        Log.d("www", intent.getStringExtra("action")!!)
+        if(action.equals("fav")) {
+            if (player.isPlaying) player.pause()
+            else {
+                if (tts.ttsState == 1) {
+                    tts.textToSpeech.stop()
+                    tts.ttsState = -1
+                }
+                else player.play()
+            }
+        }
     }
 
 }

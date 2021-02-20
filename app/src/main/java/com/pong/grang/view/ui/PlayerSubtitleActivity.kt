@@ -38,6 +38,7 @@ import com.pong.grang.databinding.ActivityPlayerSubtitleBinding
 import com.pong.grang.databinding.DialogAddSubtitleBinding
 import com.pong.grang.helper.CenterSmoothScroller
 import com.pong.grang.model.SubtitleModel
+import com.pong.grang.model.TTSModel
 import com.pong.grang.view.adapter.ActionReceiver
 import com.pong.grang.view.adapter.DescriptionAdapter
 import com.pong.grang.view.adapter.SubtitleAdapter
@@ -56,12 +57,11 @@ class PlayerSubtitleActivity : AppCompatActivity() {
     private lateinit var scrollSubtitleRunnable : Runnable
     private lateinit var scrollSubtitleHandler : Handler
     private lateinit var playerNotificationMangager : PlayerNotificationManager
-    private lateinit var textToSpeech : TextToSpeech
+    private lateinit var tts : TTSModel
 
     private var player : SimpleExoPlayer? = null
     private var isSync : Boolean = false
     private var isTTS : Boolean = false
-    private var ttsState : Int = -1
     private var currentSrtLine : SRTLine? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,8 +73,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         setUri()
         initSubtitleData()
         initPlayer()
-        initPlayerNotification()
         initTextToSpeech()
+        initPlayerNotification()
         initRecyclerView()
         initSubtitleSync()
         initButtonListener()
@@ -86,8 +86,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
         playerNotificationMangager.setPlayer(null)
         player!!.release()
         player = null
-        textToSpeech.stop()
-        textToSpeech.shutdown()
+        tts.textToSpeech.stop()
+        tts.textToSpeech.shutdown()
         detachSubtitleSync()
     }
 
@@ -112,16 +112,17 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(mChannel)
         }
 
-        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter(videoUri), ActionReceiver())
+        playerNotificationMangager = PlayerNotificationManager(this, channelId, 2108, DescriptionAdapter(videoUri), ActionReceiver(tts))
+        playerNotificationMangager.setUsePlayPauseActions(false)
         playerNotificationMangager.setPlayer(player)
     }
 
     private fun initTextToSpeech() {
-        textToSpeech = TextToSpeech(this, TextToSpeech.OnInitListener {
+        val textToSpeech = TextToSpeech(this, TextToSpeech.OnInitListener {
             if (it === TextToSpeech.SUCCESS) {
                 //사용할 언어를 설정
                 player!!.playWhenReady = true
-                val result = textToSpeech.setLanguage(Locale.KOREA)
+                val result = tts.textToSpeech.setLanguage(Locale.KOREA)
                 //언어 데이터가 없거나 혹은 언어가 지원하지 않으면...
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Toast.makeText(this@PlayerSubtitleActivity, "이 언어는 지원하지 않습니다.", Toast.LENGTH_SHORT).show()
@@ -131,18 +132,19 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                         override fun onStart(p0: String?) {}
 
                         override fun onDone(p0: String?) {
-                            ttsState = 2
+                            tts.ttsState = 2
                             Log.d("w", "eeeee")
                         }
                     }
 
-                    textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener)
+                    tts.textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener)
 //                    btnEnter.setEnabled(true)
 //                    textToSpeech.setPitch(0.7f)
 //                    textToSpeech.setSpeechRate(1.2f)
                 }
             }
         })
+        tts = TTSModel(textToSpeech, -1)
     }
 
     private fun setUri() {
@@ -228,7 +230,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 val subtitleDelay = 300
                 if(player != null) {
                     val currentPos = player!!.currentPosition
-                    when(ttsState) {
+                    when(tts.ttsState) {
                         -1 -> changeCurrentSrtLine (currentPos, subtitleDelay)
                         0 -> {
                             if (currentSrtLine == null || !(currentPos >= currentSrtLine!!.time.start - subtitleDelay
@@ -251,8 +253,8 @@ class PlayerSubtitleActivity : AppCompatActivity() {
 
     private fun playCurrentSubtitleTTS() {
         player?.pause()
-        ttsState = 1
-        textToSpeech.speak(currentSrtLine?.printLines(currentSrtLine!!.textLines), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID)
+        tts.ttsState = 1
+        tts.textToSpeech.speak(currentSrtLine?.printLines(currentSrtLine!!.textLines), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID)
     }
 
     private fun changeCurrentSrtLine(currentPos : Long, subtitleDelay : Int) {
@@ -262,7 +264,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
                 && currentPos <= srtLine.time.end - subtitleDelay
             ) {
                 flag = false
-                ttsState = 0
+                tts.ttsState = 0
                 if(currentSrtLine != null) {
                     typeFaceToNormal(currentSrtLine!!.id)
                 }
@@ -277,7 +279,7 @@ class PlayerSubtitleActivity : AppCompatActivity() {
             }
         }
         if(flag)
-            ttsState = -1
+            tts.ttsState = -1
     }
 
     private fun typeFaceToNormal(id : Int?) {
