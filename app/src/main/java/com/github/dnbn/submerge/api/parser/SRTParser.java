@@ -22,10 +22,12 @@ public final class SRTParser extends BaseParser<SRTSub> {
 	protected void parse(BufferedReader br, SRTSub sub) throws IOException, InvalidSubException {
 
 		boolean found = true;
+		int idx = 0;
 		while (found) {
-			SRTLine line = firstIn(br);
+			SRTLine line = firstIn(idx, br);
 			if (found = (line != null)) {
 				sub.add(line);
+				idx++;
 			}
 		}
 	}
@@ -46,7 +48,7 @@ public final class SRTParser extends BaseParser<SRTSub> {
 	 * @throws IOException
 	 * @throws InvalidSRTSubException
 	 */
-	private static SRTLine firstIn(BufferedReader br) throws IOException, InvalidSRTSubException {
+	private static SRTLine firstIn(int idx, BufferedReader br) throws IOException, InvalidSRTSubException {
 
 		String idLine = readFirstTextLine(br);
 		String timeLine = br.readLine();
@@ -67,7 +69,7 @@ public final class SRTParser extends BaseParser<SRTSub> {
 			textLines.add(testLine);
 		}
 
-		return new SRTLine(id, time, textLines);
+		return new SRTLine(idx, time, textLines);
 	}
 
 	/**
