@@ -12,6 +12,9 @@ import com.pong.grang.model.TTSModel
 
 
 class ActionReceiver(private val tts: TTSModel) : PlayerNotificationManager.CustomActionReceiver{
+
+    private lateinit var action1 : NotificationCompat.Action
+
     override fun getCustomActions(player: Player): MutableList<String> {
         val customActions: MutableList<String> = ArrayList()
         customActions.add("fav")
@@ -26,7 +29,7 @@ class ActionReceiver(private val tts: TTSModel) : PlayerNotificationManager.Cust
         val pendingIntent = PendingIntent.getBroadcast(
             context, instanceId, intent, PendingIntent.FLAG_CANCEL_CURRENT
         )
-        val action1: NotificationCompat.Action =
+        action1 =
             NotificationCompat.Action(
                 R.drawable.exo_icon_play,
                 "fav",
@@ -40,7 +43,10 @@ class ActionReceiver(private val tts: TTSModel) : PlayerNotificationManager.Cust
 
     override fun onCustomAction(player: Player, action: String, intent: Intent) {
         if(action == "fav") {
-            if (player.isPlaying) player.pause()
+            if (player.isPlaying) {
+                player.pause()
+                action1.icon = R.drawable.exo_icon_pause
+            }
             else {
                 if (tts.ttsState == 1) {
                     tts.textToSpeech.stop()
