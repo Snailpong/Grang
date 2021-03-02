@@ -4,16 +4,17 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.preference.Preference
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.github.dnbn.submerge.api.parser.SMIConverter
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.pedro.library.AutoPermissions
 import com.pedro.library.AutoPermissionsListener
 import com.pong.grang.UriPathHelper
 import com.pong.grang.databinding.ActivityMainBinding
 import com.pong.grang.helper.PreferenceManager
+import org.apache.commons.io.FilenameUtils
 
 
 class MainActivity : AppCompatActivity(), AutoPermissionsListener {
@@ -51,6 +52,10 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
                 startActivityForResult(subtitleIntent, SELECT_SUBTITLE)
             } else if (requestCode == SELECT_SUBTITLE) {
                 subtitlePath = getPath(videoUri)
+                val extension = FilenameUtils.getExtension(subtitlePath)
+                if(extension == "smi") {
+                    SMIConverter.convertToFile(subtitlePath)
+                }
                 Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
                 startPlayer()
             }
@@ -93,7 +98,7 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
             lastVideoPath = path
             PreferenceManager.setString(this@MainActivity, "lastVideoPath", path)
             ChooserDialog(this@MainActivity)
-                .withFilterRegex(false, false, ".*\\.(srt)")
+                .withFilterRegex(false, false, ".*\\.(smi|srt)")
                 .withStartFile(path)
 //                .withResources(
 //                    R.string.title_choose_video,
