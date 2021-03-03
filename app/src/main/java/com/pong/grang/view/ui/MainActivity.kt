@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -35,31 +36,6 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
         AutoPermissions.Companion.loadAllPermissions(this,101);
         binding.selectVideoMain.setOnClickListener(SelectVideoListener())
 
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == RESULT_OK) {
-            val videoUri : Uri = data!!.data!!
-            if (requestCode == SELECT_MOVIE) {
-                videoPath = getPath(videoUri)
-                Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
-
-                val subtitleIntent = Intent(Intent.ACTION_GET_CONTENT)
-                subtitleIntent.setType("*/*")
-                subtitleIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivityForResult(subtitleIntent, SELECT_SUBTITLE)
-            } else if (requestCode == SELECT_SUBTITLE) {
-                subtitlePath = getPath(videoUri)
-                val extension = FilenameUtils.getExtension(subtitlePath)
-                if(extension == "smi") {
-                    SMIConverter.convertToFile(subtitlePath)
-                }
-                Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
-                startPlayer()
-            }
-        }
     }
 
     private fun getPath(videoUri: Uri): String {
@@ -114,6 +90,16 @@ class MainActivity : AppCompatActivity(), AutoPermissionsListener {
         ChooserDialog.Result { path, pathFile ->
             subtitlePath = path
             Toast.makeText(this@MainActivity, path, Toast.LENGTH_LONG).show()
+
+            val extension = FilenameUtils.getExtension(subtitlePath)
+
+            if(extension == "smi") {
+                Log.d("www", "wwwwww")
+                val file = SMIConverter.convertToFile(subtitlePath)
+                Log.d("www", file)
+            }
+            Toast.makeText(this, videoPath, Toast.LENGTH_LONG).show()
+
             startPlayer()
         }
 
